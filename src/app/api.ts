@@ -1,6 +1,6 @@
 import { projectId, publicAnonKey } from '/utils/supabase/info';
 
-const BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-14216ce3`;
+export const BASE_URL = `https://${projectId}.supabase.co/functions/v1/${import.meta.env.VITE_SUPABASE_FUNCTION_SLUG}`;
 
 export async function apiRequest(
   path: string,

@@ -506,8 +506,7 @@ export function ServiceDetail() {
     if (id) load();
   }, [id]);
 
-  const SITE_URL = 'https://powder-cover-47155849.figma.site';
-  const origin = SITE_URL;
+  const origin = import.meta.env.VITE_SITE_URL as string;
 
   const copy = (text: string, key: string) => {
     try {

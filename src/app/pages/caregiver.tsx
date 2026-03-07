@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Heart, Calendar, Clock, Send, CheckCircle, AlertCircle, Loader2, ClipboardList, User, Lock, MapPin, Phone, Upload, X, FileText, Image as ImageIcon, Paperclip } from 'lucide-react';
-import { apiRequest } from '../api';
-import { projectId, publicAnonKey } from '/utils/supabase/info';
-
-const BASE_URL = `https://${projectId}.supabase.co/functions/v1/make-server-14216ce3`;
+import { apiRequest, BASE_URL } from '../api';
+import { publicAnonKey } from '/utils/supabase/info';
 
 const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 function fmtDate(d: string) {
