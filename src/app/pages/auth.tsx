@@ -41,7 +41,7 @@ export function LoginPage() {
   };
 
   const autofill = () => {
-    setEmail('marcus@caretracker.com');
+    setEmail('marcus@care-tracker-nocountry.vercel.app');
     setPassword('admin123');
     setError('');
   };
@@ -74,7 +74,7 @@ export function LoginPage() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  placeholder="marcus@caretracker.com"
+                  placeholder="marcus@care-tracker-nocountry.vercel.app"
                   className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                   required
                 />

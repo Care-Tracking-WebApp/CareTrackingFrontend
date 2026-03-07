@@ -36,7 +36,7 @@ app.use("/*", cors({
   maxAge: 600,
 }));
 
-const ADMIN_EMAIL = "marcus@caretracker.com";
+const ADMIN_EMAIL = "marcus@care-tracker-nocountry.vercel.app";
 const ADMIN_PASSWORD = "admin123";
 
 async function verifyAdmin(c: any): Promise<boolean> {

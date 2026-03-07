@@ -312,9 +312,9 @@ export function ServiceNew() {
       patientName: 'Carlos Reyes',
       district: 'Surco',
       address: 'Av. Caminos del Inca 350',
-      patientPhone: '+51 987 654 321',
+      patientPhone: '+51 888 888 888',
       caregiverName: 'Victor Stone',
-      caregiverPhone: '+51 912 345 678',
+      caregiverPhone: '+51 999 999 999',
       startDate: '2026-03-10',
       endDate: '2026-03-31',
       days: 'Lunes a Viernes',
@@ -378,7 +378,7 @@ export function ServiceNew() {
           </div>
           <FormField label="Celular del paciente o familiar">
             <input value={form.patientPhone} onChange={e => set('patientPhone', e.target.value)}
-              placeholder="+51 987 654 321" className={inputCls} type="tel" />
+              placeholder="+51 888 888 888" className={inputCls} type="tel" />
           </FormField>
         </FormSection>
 
@@ -390,7 +390,7 @@ export function ServiceNew() {
           </FormField>
           <FormField label="Celular del cuidador">
             <input value={form.caregiverPhone} onChange={e => set('caregiverPhone', e.target.value)}
-              placeholder="+51 912 345 678" className={inputCls} type="tel" />
+              placeholder="+51 999 999 999" className={inputCls} type="tel" />
           </FormField>
         </FormSection>
 
