@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router';
 import {
   Heart, LogOut, Plus, ArrowLeft, Copy, MessageCircle,
-  Clock, Users, ClipboardList, Calendar, MapPin, User, Check,
-  ChevronRight, Zap, AlertCircle, Loader2, Trash2, Phone, Paperclip, FileText, Image as ImageIcon
+  Clock, ClipboardList, Calendar, MapPin, User, Check,
+  ChevronRight, Zap, AlertCircle, Loader2, Trash2, Phone, FileText
 } from 'lucide-react';
 import { apiRequest, getAdminToken, clearAdminToken } from '../api';
 import { toast } from 'sonner';
@@ -159,19 +159,16 @@ export function AdminDashboard() {
     setLoading(true);
     setError('');
     try {
-      const data = await apiRequest('/services', {}, getAdminToken()!);
+      const data = await apiRequest('/services', {}, getAdminToken()!) as Service[];
       setServices(data);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => { load(); }, [load]);
-
-  const totalShifts = services.reduce((s, v) => s + v.shiftCount, 0);
-  const totalHours = services.reduce((s, v) => s + v.totalHours, 0);
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -181,8 +178,8 @@ export function AdminDashboard() {
       await apiRequest(`/services/${id}`, { method: 'DELETE' }, getAdminToken()!);
       setServices(prev => prev.filter(s => s.id !== id));
       toast.success('Servicio eliminado');
-    } catch (err: any) {
-      toast.error(`Error al eliminar: ${err.message}`);
+    } catch (err) {
+      toast.error(`Error al eliminar: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setDeletingId(null);
     }
@@ -280,17 +277,6 @@ export function AdminDashboard() {
   );
 }
 
-function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: any; color: string }) {
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
-      <div className={`w-9 h-9 ${color} rounded-xl flex items-center justify-center mb-3`}>
-        {icon}
-      </div>
-      <p className="text-2xl font-bold text-slate-900">{value}</p>
-      <p className="text-xs text-slate-500 mt-0.5">{label}</p>
-    </div>
-  );
-}
 
 // ─── New Service ─────────────────────────────────────────────────────────────
 
@@ -331,10 +317,10 @@ export function ServiceNew() {
       const service = await apiRequest('/services', {
         method: 'POST',
         body: JSON.stringify(form),
-      }, getAdminToken()!);
+      }, getAdminToken()!) as { id: string };
       navigate(`/service/${service.id}`);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -495,10 +481,10 @@ export function ServiceDetail() {
     const load = async () => {
       setLoading(true);
       try {
-        const data = await apiRequest(`/services/${id}`, {}, getAdminToken()!);
+        const data = await apiRequest(`/services/${id}`, {}, getAdminToken()!) as ServiceDetail;
         setService(data);
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
       } finally {
         setLoading(false);
       }

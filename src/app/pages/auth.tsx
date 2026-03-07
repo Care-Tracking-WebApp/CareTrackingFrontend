@@ -33,8 +33,8 @@ export function LoginPage() {
       });
       setAdminToken(data.token);
       navigate('/dashboard', { replace: true });
-    } catch (err: any) {
-      setError(err.message || 'Error al iniciar sesión');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
     } finally {
       setLoading(false);
     }

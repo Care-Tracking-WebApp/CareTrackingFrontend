@@ -6,7 +6,7 @@ export async function apiRequest(
   path: string,
   options: RequestInit = {},
   adminToken?: string
-): Promise<any> {
+): Promise<unknown> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     // Always use publicAnonKey so Supabase gateway lets the request through
