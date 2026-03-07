@@ -107,9 +107,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-teal-600 rounded-lg flex items-center justify-center">
-              <Heart className="w-4 h-4 text-white fill-white" />
-            </div>
+            <img src="/logo.png" alt="CareTracker" className="w-7 h-7 rounded-lg" />
             <span className="font-bold text-slate-900 text-sm">CareTracker</span>
           </Link>
           <div className="flex items-center gap-3">
