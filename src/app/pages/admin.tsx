@@ -528,8 +528,9 @@ export function ServiceDetail() {
     }
   };
 
-  const shareWhatsApp = (text: string) => {
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  const shareWhatsApp = (phone: string, text: string) => {
+    const digits = phone.replace(/\D/g, '');
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
   if (loading) return (
@@ -606,7 +607,7 @@ export function ServiceDetail() {
             link={caregiverLink}
             isCopied={copied === 'caregiver'}
             onCopy={() => copy(caregiverLink, 'caregiver')}
-            onWhatsApp={() => shareWhatsApp(`Hola! Usa este link para registrar tus guardias:\n${caregiverLink}`)}
+            onWhatsApp={() => shareWhatsApp(service.caregiverPhone, `Hola! Usa este link para registrar tus guardias:\n${caregiverLink}`)}
           />
           <LinkRow
             label="Link del familiar o paciente"
@@ -615,7 +616,7 @@ export function ServiceDetail() {
             link={familyLink}
             isCopied={copied === 'family'}
             onCopy={() => copy(familyLink, 'family')}
-            onWhatsApp={() => shareWhatsApp(`Hola! Usa este link para ver los informes de cuidado:\n${familyLink}`)}
+            onWhatsApp={() => shareWhatsApp(service.patientPhone, `Hola! Usa este link para ver los informes de cuidado:\n${familyLink}`)}
           />
         </div>
       </div>
