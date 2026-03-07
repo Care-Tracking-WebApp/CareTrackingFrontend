@@ -4,6 +4,42 @@ Proyecto demo desarrollado para **No Country** — Simulación **S02-26**, Equip
 
 CareTracker es una aplicación web para la gestión y seguimiento de servicios de cuidado domiciliario. Permite a un administrador crear servicios, asignar cuidadores y generar links compartibles para que cuidadores registren sus guardias y familiares consulten informes.
 
+## Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                      Vercel (CDN)                       │
+│               Frontend — React SPA (hash)               │
+└──────────────────────┬──────────────────────────────────┘
+                       │  HTTPS + Bearer token (anon key)
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│                 Supabase Edge Function                   │
+│         API REST (Hono) — Deno runtime serverless        │
+│                                                         │
+│  /admin/login    /services    /shifts    /caregiver/:t  │
+│  /family/:t      /upload-evidence                       │
+└────────┬──────────────────────────────┬─────────────────┘
+         │                              │
+         ▼                              ▼
+┌──────────────────┐         ┌────────────────────┐
+│  Supabase DB     │         │  Supabase Storage  │
+│  (PostgreSQL)    │         │  (bucket privado)  │
+│                  │         │                    │
+│  kv_store table  │         │  Evidencia foto-   │
+│  (key → JSONB)   │         │  gráfica de        │
+│                  │         │  guardias           │
+└──────────────────┘         └────────────────────┘
+```
+
+La aplicación sigue una arquitectura **serverless** con separación clara entre frontend y backend:
+
+- **Frontend (SPA)** — Aplicación React de una sola página desplegada como archivos estáticos en Vercel. Usa `HashRouter` para la navegación del lado del cliente. Toda la lógica de UI vive aquí; no hay server-side rendering.
+- **Backend (Edge Function)** — Una única Supabase Edge Function escrita con Hono (framework HTTP para Deno). Expone una API REST que maneja autenticación del admin, CRUD de servicios, registro de guardias y subida de evidencia. Corre en el edge runtime de Supabase (Deno Deploy).
+- **Base de datos** — PostgreSQL gestionado por Supabase. Se utiliza una tabla `kv_store` como almacén clave-valor genérico (key TEXT → value JSONB) para servicios, turnos y sesiones.
+- **Almacenamiento** — Supabase Storage con un bucket privado para las fotos de evidencia subidas por los cuidadores. Se generan URLs firmadas temporales para visualización.
+- **Autenticación** — Sistema simple basado en tokens. El admin se autentica con email/contraseña, recibe un token UUID que se almacena en localStorage y se envía como header `X-Admin-Token`. Los cuidadores y familiares acceden sin login mediante tokens únicos en la URL.
+
 ## Stack tecnológico
 
 - **React 18** + **TypeScript**
