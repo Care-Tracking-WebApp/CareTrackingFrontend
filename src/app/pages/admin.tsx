@@ -506,7 +506,7 @@ export function ServiceDetail() {
     if (id) load();
   }, [id]);
 
-  const origin = import.meta.env.VITE_SITE_URL as string;
+  const origin = (import.meta.env.VITE_SITE_URL as string | undefined) ?? window.location.origin;
 
   const copy = (text: string, key: string) => {
     try {
