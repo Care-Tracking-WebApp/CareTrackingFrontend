@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Heart, AlertCircle, Loader2, Calendar, Clock, User, MapPin, ClipboardList, Phone, FileText } from 'lucide-react';
+import { AlertCircle, Loader2, Calendar, Clock, User, MapPin, ClipboardList, Phone, FileText } from 'lucide-react';
 import { apiRequest } from '../api';
 
 const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -70,9 +70,7 @@ export function FamilyView({ token }: { token: string }) {
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-2">
-          <div className="w-7 h-7 bg-teal-600 rounded-lg flex items-center justify-center">
-            <Heart className="w-4 h-4 text-white fill-white" />
-          </div>
+          <img src="/logo.png" alt="CareTracker" className="w-7 h-7 rounded-lg" />
           <span className="font-bold text-slate-900 text-sm">CareTracker</span>
         </div>
       </header>

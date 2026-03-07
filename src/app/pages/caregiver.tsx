@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Heart, Calendar, Clock, Send, CheckCircle, AlertCircle, Loader2, ClipboardList, User, Lock, MapPin, Phone, Upload, X, FileText, Image as ImageIcon, Paperclip } from 'lucide-react';
+import { Calendar, Clock, Send, CheckCircle, AlertCircle, Loader2, ClipboardList, User, Lock, MapPin, Phone, Upload, X, FileText, Image as ImageIcon, Paperclip } from 'lucide-react';
 import { apiRequest, BASE_URL } from '../api';
 import { publicAnonKey } from '/utils/supabase/info';
 
@@ -270,9 +270,7 @@ export function CaregiverView({ token }: { token: string }) {
       {/* Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-2">
-          <div className="w-7 h-7 bg-teal-600 rounded-lg flex items-center justify-center">
-            <Heart className="w-4 h-4 text-white fill-white" />
-          </div>
+          <img src="/logo.png" alt="CareTracker" className="w-7 h-7 rounded-lg" />
           <span className="font-bold text-slate-900 text-sm">CareTracker</span>
         </div>
       </header>

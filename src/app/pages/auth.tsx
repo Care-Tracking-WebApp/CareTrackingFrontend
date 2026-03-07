@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Heart, Mail, Lock, LogIn, Zap } from 'lucide-react';
+import { Mail, Lock, LogIn, Zap } from 'lucide-react';
 import { apiRequest, setAdminToken, getAdminToken } from '../api';
 
 export function LoginPage() {
@@ -43,9 +43,7 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-teal-600 rounded-2xl mb-4 shadow-lg">
-            <Heart className="w-7 h-7 text-white fill-white" />
-          </div>
+          <img src="/logo.png" alt="CareTracker" className="w-14 h-14 rounded-2xl mb-4 shadow-lg mx-auto" />
           <h1 className="text-2xl font-bold text-slate-900">CareTracker</h1>
           <p className="text-slate-500 text-sm mt-1">Gestión de cuidados y pacientes</p>
         </div>
