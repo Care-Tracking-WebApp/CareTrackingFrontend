@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Heart, Mail, Lock, LogIn, Zap } from 'lucide-react';
 import { apiRequest, setAdminToken, getAdminToken } from '../api';
-import { consumePendingPublicRoute } from '../hash-guard';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -11,14 +10,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Check if we were supposed to go to a public route (hash-guard)
-  // or if already logged in
   React.useEffect(() => {
-    const pendingRoute = consumePendingPublicRoute();
-    if (pendingRoute) {
-      navigate(pendingRoute, { replace: true });
-      return;
-    }
     if (getAdminToken()) navigate('/dashboard', { replace: true });
   }, [navigate]);
 
