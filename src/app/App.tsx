@@ -1,7 +1,3 @@
-// hash-guard DEBE importarse antes que cualquier otro módulo
-// para capturar window.location.hash lo más temprano posible.
-import './hash-guard';
-
 import React, { useState } from 'react';
 import { RouterProvider, createHashRouter } from 'react-router';
 import { Toaster } from 'sonner';

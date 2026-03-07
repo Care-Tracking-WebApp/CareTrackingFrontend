@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment, @typescript-eslint/no-explicit-any */
 // @ts-nocheck — Deno Edge Function; npm: specifiers and Deno globals are resolved at deploy time.
 import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";

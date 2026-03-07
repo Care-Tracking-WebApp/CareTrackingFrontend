@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Heart, AlertCircle, Loader2, Calendar, Clock, User, MapPin, ClipboardList, Phone, Paperclip, FileText } from 'lucide-react';
+import { Heart, AlertCircle, Loader2, Calendar, Clock, User, MapPin, ClipboardList, Phone, FileText } from 'lucide-react';
 import { apiRequest } from '../api';
 
 const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
@@ -37,9 +37,9 @@ export function FamilyView({ token }: { token: string }) {
       try {
         const data = await apiRequest(`/family/${token}`);
         setInfo(data);
-      } catch (e: any) {
+      } catch (e) {
         console.error('Error cargando info familiar:', e);
-        setError(e.message || 'Error al cargar la información');
+        setError(e instanceof Error ? e.message : 'Error al cargar la información');
       } finally {
         setLoading(false);
       }

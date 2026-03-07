@@ -118,9 +118,9 @@ export function CaregiverView({ token }: { token: string }) {
       try {
         const data = await apiRequest(`/caregiver/${token}`);
         setInfo(data);
-      } catch (e: any) {
+      } catch (e) {
         console.error('Error cargando info cuidador:', e);
-        setError(e.message || 'Error al cargar la información');
+        setError(e instanceof Error ? e.message : 'Error al cargar la información');
       } finally {
         setLoading(false);
       }
@@ -198,7 +198,7 @@ export function CaregiverView({ token }: { token: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
       return data;
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error subiendo evidencia:', err);
       throw err;
     } finally {
@@ -238,9 +238,9 @@ export function CaregiverView({ token }: { token: string }) {
       setHours('6');
       removeFile();
       setTimeout(() => setSuccess(false), 4000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error registrando guardia:', err);
-      setSubmitError(err.message || 'Error al registrar la guardia');
+      setSubmitError(err instanceof Error ? err.message : 'Error al registrar la guardia');
     } finally {
       setSubmitting(false);
     }
