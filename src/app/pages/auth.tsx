@@ -97,7 +97,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white font-medium py-2.5 px-4 rounded-lg transition-colors text-sm cursor-pointer"
             >
               <LogIn className="w-4 h-4" />
               {loading ? 'Ingresando...' : 'Ingresar'}
@@ -108,7 +108,7 @@ export function LoginPage() {
             <button
               type="button"
               onClick={autofill}
-              className="w-full flex items-center justify-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-600 font-medium py-2.5 px-4 rounded-lg transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-600 font-medium py-2.5 px-4 rounded-lg transition-colors text-sm cursor-pointer"
             >
               <Zap className="w-4 h-4 text-amber-500" />
               Rellenar datos de prueba
