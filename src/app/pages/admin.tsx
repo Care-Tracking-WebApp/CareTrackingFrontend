@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router';
 import {
   Heart, LogOut, Plus, ArrowLeft, Copy, MessageCircle, ExternalLink,
-  Clock, ClipboardList, Calendar, MapPin, User, Check,
+  Clock, ClipboardList, Calendar, MapPin, User, Check, Search,
   ChevronRight, Zap, AlertCircle, Loader2, Trash2, Phone, FileText
 } from 'lucide-react';
 import { apiRequest, getAdminToken, clearAdminToken } from '../api';
@@ -144,9 +144,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </Link>
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2">
-              <div className="w-7 h-7 bg-teal-100 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-teal-700" />
-              </div>
+              <span className="bg-teal-100 text-teal-700 text-xs font-semibold px-2 py-0.5 rounded-full">Admin</span>
               <span className="text-sm font-medium text-slate-700">Marcus Milton</span>
             </div>
             <button
@@ -186,6 +184,26 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState<'all' | 'completed' | 'remaining'>('all');
+
+  const filteredServices = services.filter(s => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const matches = s.patientName.toLowerCase().includes(q)
+        || s.caregiverName.toLowerCase().includes(q)
+        || s.district?.toLowerCase().includes(q);
+      if (!matches) return false;
+    }
+    if (filter !== 'all') {
+      const assigned = calcAssignedHours(s.startDate, s.endDate, s.schedule, s.days);
+      if (assigned == null) return filter === 'remaining';
+      const remaining = Math.max(0, assigned - s.totalHours);
+      if (filter === 'completed') return remaining <= 0;
+      if (filter === 'remaining') return remaining > 0;
+    }
+    return true;
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -238,8 +256,38 @@ export function AdminDashboard() {
 
       {/* Services list */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100">
+        <div className="px-6 py-4 border-b border-slate-100 space-y-3">
           <h2 className="font-semibold text-slate-800">Servicios registrados</h2>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Buscar por paciente, cuidador o distrito..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-400 transition-colors"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilter('all')}
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${filter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+            >
+              Todos
+            </button>
+            <button
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${filter === 'completed' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              onClick={() => setFilter('completed')}
+            >
+              Completados
+            </button>
+            <button
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${filter === 'remaining' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              onClick={() => setFilter('remaining')}
+            >
+              Faltantes
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -265,9 +313,14 @@ export function AdminDashboard() {
               <Plus className="w-4 h-4" /> Crear servicio
             </button>
           </div>
+        ) : filteredServices.length === 0 ? (
+          <div className="text-center py-12 px-6">
+            <Search className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+            <p className="text-sm text-slate-500">No se encontraron servicios con ese filtro</p>
+          </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {services.map(s => (
+            {filteredServices.map(s => (
               <div
                 key={s.id}
                 onClick={() => navigate(`/service/${s.id}`)}
