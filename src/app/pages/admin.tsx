@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router';
 import {
-  Heart, LogOut, Plus, ArrowLeft, Copy, MessageCircle,
+  Heart, LogOut, Plus, ArrowLeft, Copy, MessageCircle, ExternalLink,
   Clock, ClipboardList, Calendar, MapPin, User, Check,
   ChevronRight, Zap, AlertCircle, Loader2, Trash2, Phone, FileText
 } from 'lucide-react';
@@ -591,6 +591,7 @@ export function ServiceDetail() {
             link={caregiverLink}
             isCopied={copied === 'caregiver'}
             onCopy={() => copy(caregiverLink, 'caregiver')}
+            onView={() => window.open(`/#/shifts/${service.caregiverToken}`, '_blank')}
             onWhatsApp={() => shareWhatsApp(service.caregiverPhone, `Hola! Usa este link para registrar tus guardias:\n${caregiverLink}`)}
           />
           <LinkRow
@@ -600,6 +601,7 @@ export function ServiceDetail() {
             link={familyLink}
             isCopied={copied === 'family'}
             onCopy={() => copy(familyLink, 'family')}
+            onView={() => window.open(`/#/patient/${service.familyToken}`, '_blank')}
             onWhatsApp={() => shareWhatsApp(service.patientPhone, `Hola! Usa este link para ver los informes de cuidado:\n${familyLink}`)}
           />
         </div>
@@ -683,9 +685,9 @@ function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string
   );
 }
 
-function LinkRow({ label, sublabel, color, link, isCopied, onCopy, onWhatsApp }: {
+function LinkRow({ label, sublabel, color, link, isCopied, onCopy, onView, onWhatsApp }: {
   label: string; sublabel: string; color: 'teal' | 'violet';
-  link: string; isCopied: boolean; onCopy: () => void; onWhatsApp: () => void;
+  link: string; isCopied: boolean; onCopy: () => void; onView: () => void; onWhatsApp: () => void;
 }) {
   const bg = color === 'teal' ? 'bg-teal-50' : 'bg-violet-50';
   const text = color === 'teal' ? 'text-teal-700' : 'text-violet-700';
@@ -704,6 +706,12 @@ function LinkRow({ label, sublabel, color, link, isCopied, onCopy, onWhatsApp }:
         >
           {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
           {isCopied ? 'Copiado' : 'Copiar'}
+        </button>
+        <button
+          onClick={onView}
+          className="flex items-center gap-1.5 text-xs bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg transition-colors font-medium"
+        >
+          <ExternalLink className="w-3.5 h-3.5" /> Ver formulario
         </button>
         <button
           onClick={onWhatsApp}
