@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router';
 import {
-  Heart, LogOut, Plus, ArrowLeft, Copy, MessageCircle,
-  Clock, ClipboardList, Calendar, MapPin, User, Check,
+  Heart, LogOut, Plus, ArrowLeft, Copy, MessageCircle, ExternalLink,
+  Clock, ClipboardList, Calendar, MapPin, User, Check, Search,
   ChevronRight, Zap, AlertCircle, Loader2, Trash2, Phone, FileText
 } from 'lucide-react';
 import { apiRequest, getAdminToken, clearAdminToken } from '../api';
@@ -25,45 +25,77 @@ function fmtDateShort(d: string) {
 /** Parse schedule like "8:00 - 14:00" and return hours per day */
 function parseHoursPerDay(schedule: string): number | null {
   if (!schedule) return null;
-  const m = schedule.match(/(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})/);
-  if (!m) return null;
-  const start = parseInt(m[1]) + parseInt(m[2]) / 60;
-  const end = parseInt(m[3]) + parseInt(m[4]) / 60;
-  return end > start ? end - start : 24 - start + end;
+  // "8:00 - 14:00", "08:00–14:00", "8:30 - 16:30"
+  const withMinutes = schedule.match(/(\d{1,2}):(\d{2})\s*[-–—]\s*(\d{1,2}):(\d{2})/);
+  if (withMinutes) {
+    const start = parseInt(withMinutes[1]) + parseInt(withMinutes[2]) / 60;
+    const end = parseInt(withMinutes[3]) + parseInt(withMinutes[4]) / 60;
+    return end > start ? end - start : 24 - start + end;
+  }
+  // "8 - 14", "08-14"
+  const hoursOnly = schedule.match(/(\d{1,2})\s*[-–—]\s*(\d{1,2})/);
+  if (hoursOnly) {
+    const start = parseInt(hoursOnly[1]);
+    const end = parseInt(hoursOnly[2]);
+    return end > start ? end - start : 24 - start + end;
+  }
+  return null;
 }
 
 /** Map Spanish day names to JS getDay() values (0=Sun..6=Sat) */
 const DAY_MAP: Record<string, number> = {
-  domingo: 0, lunes: 1, martes: 2, miércoles: 3, miercoles: 3,
-  jueves: 4, viernes: 5, sábado: 6, sabado: 6,
+  domingo: 0, dom: 0, do: 0, d: 0,
+  lunes: 1, lun: 1, lu: 1, l: 1,
+  martes: 2, mar: 2, ma: 2, m: 2,
+  'miércoles': 3, miercoles: 3, 'mié': 3, mie: 3, mi: 3, x: 3,
+  jueves: 4, jue: 4, ju: 4, j: 4,
+  viernes: 5, vie: 5, vi: 5, v: 5,
+  'sábado': 6, sabado: 6, 'sáb': 6, sab: 6, s: 6,
 };
 
-/** Parse days string like "Lunes a Viernes" or "Lunes, Miércoles, Viernes" */
+const ALL_WEEK = [0, 1, 2, 3, 4, 5, 6];
+const WEEKDAYS = [1, 2, 3, 4, 5];
+const WEEKENDS = [0, 6];
+
+function dayRange(from: number, to: number): number[] {
+  const result: number[] = [];
+  let d = from;
+  for (;;) {
+    result.push(d);
+    if (d === to) break;
+    d = (d + 1) % 7;
+  }
+  return result;
+}
+
+/** Parse natural-language days string into JS getDay() values */
 function parseWorkDays(days: string): number[] | null {
   if (!days) return null;
-  const lower = days.toLowerCase().trim();
+  const lower = days.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
-  // Range: "lunes a viernes"
-  const rangeMatch = lower.match(/^(\w+)\s+a\s+(\w+)$/);
+  // "todos los dias", "todos los días", "diario", "7 dias"
+  if (/todos\s+los\s+dias|diario|7\s*dias|cada\s+dia/.test(lower)) return ALL_WEEK;
+  // "entre semana", "dias de semana", "dias habiles", "dias laborales"
+  if (/entre\s+semana|dias?\s+de\s+semana|dias?\s+habiles|dias?\s+laborales/.test(lower)) return WEEKDAYS;
+  // "fines de semana", "fin de semana"
+  if (/fines?\s+de\s+semana/.test(lower)) return WEEKENDS;
+
+  // Range: "lunes a viernes", "de lunes a viernes", "L a V", "L-V"
+  const rangeMatch = lower.match(/^(?:de\s+)?([a-z]+)\s*(?:a|-|–|—)\s*([a-z]+)$/);
   if (rangeMatch) {
     const from = DAY_MAP[rangeMatch[1]];
     const to = DAY_MAP[rangeMatch[2]];
-    if (from == null || to == null) return null;
-    const result: number[] = [];
-    let d = from;
-    while (true) {
-      result.push(d);
-      if (d === to) break;
-      d = (d + 1) % 7;
-    }
-    return result;
+    if (from != null && to != null) return dayRange(from, to);
   }
 
-  // List: "lunes, miércoles, viernes"
-  const parts = lower.split(/[,;y]+/).map(s => s.trim()).filter(Boolean);
-  const mapped = parts.map(p => DAY_MAP[p]);
-  if (mapped.some(v => v == null)) return null;
-  return mapped as number[];
+  // List: "lunes, miercoles, viernes" or "lunes, miercoles y viernes"
+  const parts = lower.split(/[,;]+|\s+y\s+/).map(s => s.trim()).filter(Boolean);
+  if (parts.length > 0) {
+    const mapped = parts.map(p => DAY_MAP[p]);
+    if (mapped.every(v => v != null)) return mapped as number[];
+  }
+
+  return null;
 }
 
 /** Calculate total assigned hours based on schedule, days, and date range */
@@ -112,14 +144,12 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </Link>
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2">
-              <div className="w-7 h-7 bg-teal-100 rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-teal-700" />
-              </div>
+              <span className="bg-teal-100 text-teal-700 text-xs font-semibold px-2 py-0.5 rounded-full">Admin</span>
               <span className="text-sm font-medium text-slate-700">Marcus Milton</span>
             </div>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors px-2 py-1 rounded-lg hover:bg-slate-100"
+              className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors px-2 py-1 rounded-lg hover:bg-slate-100 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Salir</span>
@@ -141,6 +171,8 @@ interface Service {
   startDate: string;
   endDate: string;
   district: string;
+  days: string;
+  schedule: string;
   shiftCount: number;
   totalHours: number;
   createdAt: string;
@@ -152,6 +184,26 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filter, setFilter] = useState<'all' | 'completed' | 'remaining'>('all');
+
+  const filteredServices = services.filter(s => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const matches = s.patientName.toLowerCase().includes(q)
+        || s.caregiverName.toLowerCase().includes(q)
+        || s.district?.toLowerCase().includes(q);
+      if (!matches) return false;
+    }
+    if (filter !== 'all') {
+      const assigned = calcAssignedHours(s.startDate, s.endDate, s.schedule, s.days);
+      if (assigned == null) return filter === 'remaining';
+      const remaining = Math.max(0, assigned - s.totalHours);
+      if (filter === 'completed') return remaining <= 0;
+      if (filter === 'remaining') return remaining > 0;
+    }
+    return true;
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -194,7 +246,7 @@ export function AdminDashboard() {
         </div>
         <button
           onClick={() => navigate('/service/new')}
-          className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium px-4 py-2.5 rounded-xl transition-colors text-sm shadow-sm"
+          className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium px-4 py-2.5 rounded-xl transition-colors text-sm shadow-sm cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Nuevo servicio</span>
@@ -204,8 +256,38 @@ export function AdminDashboard() {
 
       {/* Services list */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-100">
+        <div className="px-6 py-4 border-b border-slate-100 space-y-3">
           <h2 className="font-semibold text-slate-800">Servicios registrados</h2>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Buscar por paciente, cuidador o distrito..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/30 focus:border-teal-400 transition-colors"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setFilter('all')}
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${filter === 'all' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+            >
+              Todos
+            </button>
+            <button
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${filter === 'completed' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              onClick={() => setFilter('completed')}
+            >
+              Completados
+            </button>
+            <button
+              className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer ${filter === 'remaining' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+              onClick={() => setFilter('remaining')}
+            >
+              Faltantes
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -226,14 +308,19 @@ export function AdminDashboard() {
             <p className="text-slate-400 text-sm mb-6">Crea el primer servicio para comenzar</p>
             <button
               onClick={() => navigate('/service/new')}
-              className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors"
+              className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium px-4 py-2 rounded-xl text-sm transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Crear servicio
             </button>
           </div>
+        ) : filteredServices.length === 0 ? (
+          <div className="text-center py-12 px-6">
+            <Search className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+            <p className="text-sm text-slate-500">No se encontraron servicios con ese filtro</p>
+          </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {services.map(s => (
+            {filteredServices.map(s => (
               <div
                 key={s.id}
                 onClick={() => navigate(`/service/${s.id}`)}
@@ -247,6 +334,19 @@ export function AdminDashboard() {
                   <p className="text-slate-500 text-xs mt-0.5 truncate">
                     Cuidador: {s.caregiverName} · {fmtDateShort(s.startDate)} – {fmtDateShort(s.endDate)}
                   </p>
+                  {(() => {
+                    const assigned = calcAssignedHours(s.startDate, s.endDate, s.schedule, s.days);
+                    if (assigned == null) return null;
+                    const remaining = Math.max(0, Math.round((assigned - s.totalHours) * 10) / 10);
+                    return (
+                      <p className="text-xs mt-0.5 text-slate-400">
+                        Tiene <span className="font-medium text-slate-600">{assigned}h</span> asignadas
+                        {remaining > 0
+                          ? <> · faltan <span className="font-medium text-amber-600">{remaining}h</span></>
+                          : <> · <span className="font-medium text-emerald-600">completadas</span></>}
+                      </p>
+                    );
+                  })()}
                 </div>
                 <div className="flex items-center gap-4 flex-shrink-0">
                   <div className="text-right hidden sm:block">
@@ -256,7 +356,7 @@ export function AdminDashboard() {
                   <button
                     onClick={(e) => handleDelete(e, s.id)}
                     disabled={deletingId === s.id}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
                     title="Eliminar servicio"
                   >
                     {deletingId === s.id
@@ -337,7 +437,7 @@ export function ServiceNew() {
         <button
           type="button"
           onClick={autofill}
-          className="flex items-center gap-1.5 text-sm border border-slate-200 hover:bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg transition-colors"
+          className="flex items-center gap-1.5 text-sm border border-slate-200 hover:bg-slate-50 text-slate-600 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
         >
           <Zap className="w-3.5 h-3.5 text-amber-500" /> Datos de prueba
         </button>
@@ -411,7 +511,7 @@ export function ServiceNew() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+          className="w-full flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white font-medium py-3 px-4 rounded-xl transition-colors cursor-pointer"
         >
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
           {loading ? 'Creando servicio...' : 'Crear servicio'}
@@ -554,9 +654,17 @@ export function ServiceDetail() {
             <h1 className="text-xl font-bold text-slate-900">{service.patientName}</h1>
             <p className="text-slate-500 text-sm mt-0.5">Servicio de cuidado</p>
           </div>
-          <span className="bg-teal-50 text-teal-700 border border-teal-200 text-xs font-medium px-3 py-1 rounded-full">
-            Activo
-          </span>
+          {assignedHours != null && (
+            <p className="text-xs text-slate-500">
+              Tiene <span className="font-semibold text-slate-700">{assignedHours}h</span> asignadas
+              {(() => {
+                const remaining = Math.max(0, Math.round((assignedHours - totalHours) * 10) / 10);
+                return remaining > 0
+                  ? <> · faltan <span className="font-semibold text-amber-600">{remaining}h</span></>
+                  : <> · <span className="font-semibold text-emerald-600">completadas</span></>;
+              })()}
+            </p>
+          )}
         </div>
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-4">
@@ -591,6 +699,7 @@ export function ServiceDetail() {
             link={caregiverLink}
             isCopied={copied === 'caregiver'}
             onCopy={() => copy(caregiverLink, 'caregiver')}
+            onView={() => window.open(`/#/shifts/${service.caregiverToken}`, '_blank')}
             onWhatsApp={() => shareWhatsApp(service.caregiverPhone, `Hola! Usa este link para registrar tus guardias:\n${caregiverLink}`)}
           />
           <LinkRow
@@ -600,6 +709,7 @@ export function ServiceDetail() {
             link={familyLink}
             isCopied={copied === 'family'}
             onCopy={() => copy(familyLink, 'family')}
+            onView={() => window.open(`/#/patient/${service.familyToken}`, '_blank')}
             onWhatsApp={() => shareWhatsApp(service.patientPhone, `Hola! Usa este link para ver los informes de cuidado:\n${familyLink}`)}
           />
         </div>
@@ -640,7 +750,7 @@ export function ServiceDetail() {
                   {shift.evidenceUrl && (
                     <div className="mt-2">
                       {shift.evidenceFileType?.startsWith('image/') ? (
-                        <a href={shift.evidenceUrl} target="_blank" rel="noopener noreferrer" className="block">
+                        <a href={shift.evidenceUrl} target="_blank" rel="noopener noreferrer" className="inline-block">
                           <img
                             src={shift.evidenceUrl}
                             alt={shift.evidenceFileName || 'Evidencia'}
@@ -683,9 +793,9 @@ function InfoItem({ icon, label, value }: { icon: React.ReactNode; label: string
   );
 }
 
-function LinkRow({ label, sublabel, color, link, isCopied, onCopy, onWhatsApp }: {
+function LinkRow({ label, sublabel, color, link, isCopied, onCopy, onView, onWhatsApp }: {
   label: string; sublabel: string; color: 'teal' | 'violet';
-  link: string; isCopied: boolean; onCopy: () => void; onWhatsApp: () => void;
+  link: string; isCopied: boolean; onCopy: () => void; onView: () => void; onWhatsApp: () => void;
 }) {
   const bg = color === 'teal' ? 'bg-teal-50' : 'bg-violet-50';
   const text = color === 'teal' ? 'text-teal-700' : 'text-violet-700';
@@ -700,14 +810,20 @@ function LinkRow({ label, sublabel, color, link, isCopied, onCopy, onWhatsApp }:
       <div className="flex gap-2">
         <button
           onClick={onCopy}
-          className="flex items-center gap-1.5 text-xs bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg transition-colors font-medium"
+          className="flex items-center gap-1.5 text-xs bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg transition-colors font-medium cursor-pointer"
         >
           {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
           {isCopied ? 'Copiado' : 'Copiar'}
         </button>
         <button
+          onClick={onView}
+          className="flex items-center gap-1.5 text-xs bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg transition-colors font-medium cursor-pointer"
+        >
+          <ExternalLink className="w-3.5 h-3.5" /> Ver formulario
+        </button>
+        <button
           onClick={onWhatsApp}
-          className="flex items-center gap-1.5 text-xs bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg transition-colors font-medium"
+          className="flex items-center gap-1.5 text-xs bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg transition-colors font-medium cursor-pointer"
         >
           <MessageCircle className="w-3.5 h-3.5" /> Enviar por WhatsApp
         </button>
