@@ -750,7 +750,7 @@ export function ServiceDetail() {
                   {shift.evidenceUrl && (
                     <div className="mt-2">
                       {shift.evidenceFileType?.startsWith('image/') ? (
-                        <a href={shift.evidenceUrl} target="_blank" rel="noopener noreferrer" className="block">
+                        <a href={shift.evidenceUrl} target="_blank" rel="noopener noreferrer" className="inline-block">
                           <img
                             src={shift.evidenceUrl}
                             alt={shift.evidenceFileName || 'Evidencia'}
