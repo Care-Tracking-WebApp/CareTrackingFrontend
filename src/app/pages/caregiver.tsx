@@ -9,9 +9,6 @@ function fmtDate(d: string) {
   const [y, m, day] = d.split('-').map(Number);
   return `${day} ${MONTHS_ES[m - 1]} ${y}`;
 }
-function today() {
-  return new Date().toISOString().split('T')[0];
-}
 
 /** Parse schedule like "8:00 - 14:00" and return hours per day */
 function parseHoursPerDay(schedule: string): number | null {
