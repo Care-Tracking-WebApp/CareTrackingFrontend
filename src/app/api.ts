@@ -1,12 +1,12 @@
-import { projectId, publicAnonKey } from '/utils/supabase/info';
+import { projectId, publicAnonKey } from '../../utils/supabase/info';
 
 export const BASE_URL = `https://${projectId}.supabase.co/functions/v1/${import.meta.env.VITE_SUPABASE_FUNCTION_SLUG}`;
 
-export async function apiRequest(
+export async function apiRequest<T = unknown>(
   path: string,
   options: RequestInit = {},
   adminToken?: string
-): Promise<unknown> {
+): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     // Always use publicAnonKey so Supabase gateway lets the request through
@@ -20,7 +20,7 @@ export async function apiRequest(
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
-  return data;
+  return data as T;
 }
 
 export const AUTH_KEY = 'caretracker_admin_token';

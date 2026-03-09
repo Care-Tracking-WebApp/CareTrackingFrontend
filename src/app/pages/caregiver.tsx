@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Calendar, Clock, Send, CheckCircle, AlertCircle, Loader2, ClipboardList, User, Lock, MapPin, Phone, Upload, X, FileText, Image as ImageIcon, Paperclip } from 'lucide-react';
 import { apiRequest, BASE_URL } from '../api';
-import { publicAnonKey } from '/utils/supabase/info';
+import { publicAnonKey } from '../../../utils/supabase/info';
 
 const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 function fmtDate(d: string) {
   if (!d) return '—';
   const [y, m, day] = d.split('-').map(Number);
   return `${day} ${MONTHS_ES[m - 1]} ${y}`;
-}
-function today() {
-  return new Date().toISOString().split('T')[0];
 }
 
 /** Parse schedule like "8:00 - 14:00" and return hours per day */
@@ -97,8 +94,8 @@ export function CaregiverView({ token }: { token: string }) {
   const [error, setError] = useState('');
 
   // Form state
-  const [date, setDate] = useState(today());
-  const [hours, setHours] = useState('6');
+  const [date, setDate] = useState('');
+  const [hours, setHours] = useState('');
   const [report, setReport] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -116,7 +113,7 @@ export function CaregiverView({ token }: { token: string }) {
       setLoading(true);
       setError('');
       try {
-        const data = await apiRequest(`/caregiver/${token}`);
+        const data = await apiRequest<ServiceInfo>(`/caregiver/${token}`);
         setInfo(data);
       } catch (e) {
         console.error('Error cargando info cuidador:', e);
@@ -230,12 +227,12 @@ export function CaregiverView({ token }: { token: string }) {
         }),
       });
       // Refresh info to show new shift
-      const data = await apiRequest(`/caregiver/${token}`);
+      const data = await apiRequest<ServiceInfo>(`/caregiver/${token}`);
       setInfo(data);
       setSuccess(true);
       setReport('');
-      setDate(today());
-      setHours('6');
+      setDate('');
+      setHours('');
       removeFile();
       setTimeout(() => setSuccess(false), 4000);
     } catch (err) {
@@ -328,7 +325,7 @@ export function CaregiverView({ token }: { token: string }) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Fecha</span>
+                  <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Fecha <span className="text-red-500">*</span></span>
                 </label>
                 <input
                   type="date"
@@ -340,7 +337,7 @@ export function CaregiverView({ token }: { token: string }) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Horas</span>
+                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> Horas <span className="text-red-500">*</span></span>
                 </label>
                 <input
                   type="number"
@@ -354,7 +351,7 @@ export function CaregiverView({ token }: { token: string }) {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                Informe del día
+                Informe del día <span className="text-red-500">*</span>
               </label>
               <textarea
                 value={report}
@@ -362,6 +359,7 @@ export function CaregiverView({ token }: { token: string }) {
                 placeholder="Ej: Paciente estable. Caminata corta por el jardín."
                 rows={3}
                 className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm resize-none"
+                required
               />
             </div>
 
