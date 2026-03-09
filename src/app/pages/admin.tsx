@@ -670,7 +670,7 @@ export function ServiceDetail() {
           <div className="grid grid-cols-3 gap-4">
             <InfoItem icon={<User className="w-4 h-4" />} label="Cuidador" value={service.caregiverName} />
             <InfoItem icon={<Phone className="w-4 h-4" />} label="Cel. cuidador" value={service.caregiverPhone || '—'} />
-            <InfoItem icon={<Phone className="w-4 h-4" />} label="Cel. paciente" value={service.patientPhone || '—'} />
+            <InfoItem icon={<Phone className="w-4 h-4" />} label="Cel. paciente o familiar" value={service.patientPhone || '—'} />
           </div>
           <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-100">
             <InfoItem icon={<Calendar className="w-4 h-4" />} label="Inicio" value={fmtDate(service.startDate)} />
