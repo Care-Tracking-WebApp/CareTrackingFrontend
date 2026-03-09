@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from 'utils/supabase/info';
+import { projectId, publicAnonKey } from '../../utils/supabase/info';
 
 export const BASE_URL = `https://${projectId}.supabase.co/functions/v1/${import.meta.env.VITE_SUPABASE_FUNCTION_SLUG}`;
 

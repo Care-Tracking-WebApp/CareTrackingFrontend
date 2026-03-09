@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Calendar, Clock, Send, CheckCircle, AlertCircle, Loader2, ClipboardList, User, Lock, MapPin, Phone, Upload, X, FileText, Image as ImageIcon, Paperclip } from 'lucide-react';
 import { apiRequest, BASE_URL } from '../api';
-import { publicAnonKey } from 'utils/supabase/info';
+import { publicAnonKey } from '../../../utils/supabase/info';
 
 const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 function fmtDate(d: string) {
