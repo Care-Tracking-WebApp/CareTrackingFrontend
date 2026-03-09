@@ -35,7 +35,7 @@ export function FamilyView({ token }: { token: string }) {
       setLoading(true);
       setError('');
       try {
-        const data = await apiRequest(`/family/${token}`);
+        const data = await apiRequest<FamilyInfo>(`/family/${token}`);
         setInfo(data);
       } catch (e) {
         console.error('Error cargando info familiar:', e);
